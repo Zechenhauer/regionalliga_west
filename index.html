@@ -9,28 +9,8 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%237a1f18%22/><text x=%2250%22 y=%2272%22 font-size=%2262%22 text-anchor=%22middle%22>⚽</text></svg>">
     <link rel="apple-touch-icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%237a1f18%22/><text x=%2250%22 y=%2272%22 font-size=%2262%22 text-anchor=%22middle%22>⚽</text></svg>">
     
-    <!-- OneSignal SDK -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    <script>
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      window.OneSignalDeferred.push(async function(OneSignal) {
-        await OneSignal.init({
-          appId: "30528bc1-cf0a-475d-bc60-12bd4bf0b7b9",
-          safari_web_id: "",
-          path: "/regionalliga-west/",
-          allowLocalhostAsSecureOrigin: true,
-          notifyButton: {
-            enable: true,
-            size: 'medium',
-            position: 'bottom-right',
-            colors: {
-              'circle.background': '#da291c',
-              'circle.foreground': '#ffffff',
-            }
-          },
-        });
-      });
-    </script>
+    <!-- Supabase Client Bibliothek laden -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         :root {
@@ -74,7 +54,7 @@
         .author-avatar { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid var(--accent-color); }
         .author-text { color: var(--accent-color); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
 
-        .status-box { background: #131824; border: 1px solid var(--accent-color); padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; }
+        .status-box { background: #131824; border: 1px solid var(--accent-color); padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
 
         /* Laufband Design */
         .ticker-wrapper { width: 100%; background: #0c0809; border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; margin-bottom: 20px; display: flex; align-items: center; height: 48px; position: relative; }
@@ -101,6 +81,11 @@
         button:hover, select:hover { background: #30363d; }
         select { padding-right: 30px; }
 
+        /* Live Polling Schalter Styling */
+        .polling-toggle-btn { display: inline-flex; align-items: center; gap: 8px; font-weight: bold; }
+        .polling-toggle-btn.active { background: rgba(218, 41, 28, 0.15); border-color: var(--accent-color); color: var(--accent-color); }
+        .polling-toggle-btn.inactive { background: #21262d; border-color: var(--border-color); color: var(--text-muted); }
+
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .dash-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
         .dash-card:hover { border-color: var(--accent-color); background: var(--card-hover); }
@@ -110,7 +95,13 @@
         .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; }
         h2 { font-size: 1.2rem; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; color: var(--accent-color); }
 
-        /* Spiel-Item & Gesamt-Timeline-Kachel im dezenten Gold-Ton */
+        /* Admin Bereich Styles */
+        .admin-toggle-wrapper { text-align: right; margin-top: 20px; }
+        .admin-toggle-btn { background: transparent; border: 1px dashed var(--border-color); color: var(--text-muted); padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
+        .admin-toggle-btn:hover { color: var(--accent-color); border-color: var(--accent-color); }
+        .admin-card { background: #161b22; border: 1px solid var(--accent-color); border-radius: 12px; padding: 20px; margin-top: 20px; display: none; }
+
+        /* Spiel-Item */
         .match-card-item { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; cursor: pointer; transition: background 0.15s; }
         .match-card-item:hover { background: var(--card-hover); }
         .match-main-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; }
@@ -124,7 +115,6 @@
         .live-badge { background: var(--live-red); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; animation: pulse-live 1.5s infinite; display: inline-block; }
         @keyframes pulse-live { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-        /* Timeline-Kachel komplett in dezenter Gold-Optik */
         .match-scorers-preview { 
             margin-top: 14px; 
             padding: 12px 10px; 
@@ -136,7 +126,6 @@
             gap: 10px; 
         }
 
-        /* Platz oben und unten für die kleineren Infoboxen */
         .goal-timeline-track { position: relative; margin: 34px 16px 26px 16px; height: 26px; display: flex; align-items: center; }
         .goal-timeline-line { position: absolute; width: 100%; height: 3px; background: #30363d; border-radius: 2px; top: 50%; transform: translateY(-50%); z-index: 1; }
         .goal-timeline-node { position: absolute; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; z-index: 2; }
@@ -145,7 +134,6 @@
         .goal-node-icon.home-node { border: 2px solid var(--home-color); }
         .goal-node-icon.away-node { border: 2px solid var(--away-color); }
 
-        /* Torschütze & Verein ÜBER dem Fußball (kleinere Schriftart: 0.60rem) */
         .goal-node-scorer { 
             position: absolute; 
             bottom: 20px; 
@@ -165,7 +153,6 @@
         .goal-node-scorer.home-scorer { border-color: rgba(218, 41, 28, 0.5); }
         .goal-node-scorer.away-scorer { border-color: rgba(56, 139, 253, 0.5); }
 
-        /* Spielstand & Minute UNTER dem Fußball (kleinere Schriftart: 0.60rem) */
         .goal-node-meta { 
             position: absolute; 
             top: 20px; 
@@ -280,7 +267,10 @@
             <button onclick="changeMatchday(-1)">◄ Vorheriger</button>
             <select id="matchdaySelect" onchange="loadMatchday(this.value)"></select>
             <button onclick="changeMatchday(1)">Nächster ►</button>
-            <button onclick="subscribePush()" style="background: var(--accent-color); color: #fff; font-weight: bold;">🔔 Tor-Alarm aktivieren</button>
+            <button id="pollingToggleBtn" class="polling-toggle-btn inactive" onclick="toggleLivePolling()">
+                <span id="pollingIcon">🔴</span> Live-Polling: <span id="pollingStateText">Aus</span>
+            </button>
+            <button onclick="subscribePush()" style="background: var(--accent-color); color: #fff; font-weight: bold;">🔔 Supabase Tor-Alarm</button>
         </div>
 
         <!-- Hauptbereich -->
@@ -294,6 +284,19 @@
                 <h2>Tabelle <span style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">(Klicke auf ein Team für Saisonstatistiken)</span></h2>
                 <div id="tableContainer">Lade Tabelle...</div>
             </div>
+        </div>
+
+        <!-- ADMIN BEREICH -->
+        <div class="admin-card" id="adminCard">
+            <div style="font-weight: bold; color: var(--accent-color); margin-bottom: 12px; text-transform: uppercase; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center;">
+                <span>🔧 Supabase Push-Benachrichtigung testen</span>
+                <span style="font-size: 0.7rem; color: #3fb950;">● Admin-Modus Aktiv</span>
+            </div>
+            <button style="background: #238636; width: 100%; font-weight: bold; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer;" onclick="sendTestPush()">🚀 Test-Push Benachrichtigung senden</button>
+        </div>
+
+        <div class="admin-toggle-wrapper">
+            <button class="admin-toggle-btn" onclick="toggleAdminMode()">⚙️ Admin-Zugang</button>
         </div>
     </div>
 
@@ -342,16 +345,47 @@
     </div>
 
     <script>
+        const SUPABASE_URL = 'https://lhusylpjnujlqomougmg.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_yXEueWILvAq-Vm2VfTuYyg_BIQeE1KK';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         const apiKey = "297322363f3bf16e1304cfb933a0c8d5";
         const leagueId = 87; // Regionalliga West ID
         const season = "2026";
+        const ADMIN_PIN = "1919";
+        let isAdmin = false;
+
         let currentMatchday = "";
         let globalScorersMap = {};
-        let previousScores = {};
+        let previousScores = JSON.parse(localStorage.getItem('rwo_previous_scores') || '{}');
         let smartPollingInterval = null;
+        let isLivePollingEnabled = false;
+        let recentGoalsList = JSON.parse(localStorage.getItem('rwo_recent_goals_cache') || '[]');
 
         function isRWO(name) {
             return name && (name.includes("Oberhausen") || name.includes("Rot-Weiß Oberhausen") || name.includes("RWO"));
+        }
+
+        function toggleLivePolling() {
+            isLivePollingEnabled = !isLivePollingEnabled;
+            const btn = document.getElementById("pollingToggleBtn");
+            const icon = document.getElementById("pollingIcon");
+            const stateText = document.getElementById("pollingStateText");
+
+            if (isLivePollingEnabled) {
+                btn.className = "polling-toggle-btn active";
+                icon.textContent = "🟢";
+                stateText.textContent = "An";
+                if (currentMatchday) loadMatchday(currentMatchday, true);
+            } else {
+                btn.className = "polling-toggle-btn inactive";
+                icon.textContent = "🔴";
+                stateText.textContent = "Aus";
+                if (smartPollingInterval) {
+                    clearInterval(smartPollingInterval);
+                    smartPollingInterval = null;
+                }
+            }
         }
 
         async function init() {
@@ -373,10 +407,145 @@
             }
         }
 
-        function subscribePush() {
-            window.OneSignalDeferred.push(async function(OneSignal) {
-                try { await OneSignal.Slidedown.promptPush(); } catch (e) {}
-            });
+        function toggleAdminMode() {
+            const adminCard = document.getElementById('adminCard');
+            if (isAdmin) {
+                isAdmin = false;
+                adminCard.style.display = 'none';
+                return;
+            }
+            let enteredPin = prompt("Bitte Admin-PIN eingeben:");
+            if (enteredPin === ADMIN_PIN) {
+                isAdmin = true;
+                adminCard.style.display = 'block';
+                alert("Admin-Modus erfolgreich aktiviert!");
+            } else if (enteredPin !== null) {
+                alert("Falsche PIN!");
+            }
+        }
+
+        async function sendTestPush() {
+            try {
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        table: 'push_subscriptions_rwo',
+                        title: "⚽ Regionalliga West Tor-Alarm (Test)",
+                        body: "Test-Alarm über Supabase Edge Function erfolgreich ausgelöst!"
+                    })
+                });
+                if (response.ok) alert("Test-Push erfolgreich ausgelöst!");
+                else alert("Fehler von der Edge Function.");
+            } catch (e) {
+                alert("Netzwerkfehler: " + e.message);
+            }
+        }
+
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+
+        async function subscribePush() {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                alert("Push-Benachrichtigungen werden von diesem Browser leider nicht unterstützt.");
+                return;
+            }
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    alert("Die Berechtigung für Benachrichtigungen wurde verweigert.");
+                    return;
+                }
+                const registration = await navigator.serviceWorker.register('./sw.js');
+                await registration.ready;
+
+                const publicVapidKey = 'BAsnfWgySLti5LzulXfN-xI-x7UDV32LO98YXgg1qdoRY1E1Tl05QPgCvOMgfwe80cSv_K7336-dhJTgBkHUI70';
+                const subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+                });
+
+                const p256dh = subscription.getKey('p256dh') ? btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('p256dh')))) : '';
+                const auth = subscription.getKey('auth') ? btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth')))) : '';
+
+                await supabaseClient.from('push_subscriptions_rwo').upsert({
+                    endpoint: subscription.endpoint,
+                    p256dh: p256dh,
+                    auth: auth
+                }, { onConflict: 'endpoint' });
+
+                alert("Supabase Push-Alarm erfolgreich aktiviert!");
+            } catch (error) {
+                console.error('Fehler bei der Push-Registrierung:', error);
+                alert("Fehler beim Aktivieren der Benachrichtigung: " + error.message);
+            }
+        }
+
+        const processingGoals = new Set();
+
+        async function checkAllGoalsAndNotify(home, away, hScore, aScore, latestScorer, matchId, scoringTeam) {
+            if (!latestScorer || latestScorer.includes("Tor") || latestScorer.trim() === "⚽") return;
+            if (hScore === 0 && aScore === 0) return;
+
+            let cleanPlayer = latestScorer.replace(/⚽\s*/, '').replace(/\(\d+['']\)/, '').replace('(Pen)', '').replace('(ET)', '').trim();
+            let minStr = latestScorer.match(/\(\d+['']\)/) ? ` ${latestScorer.match(/\(\d+['']\)/)[0]}` : '';
+            
+            let uniqueGoalId = `${matchId}_${hScore}:${aScore}`;
+            
+            if (processingGoals.has(uniqueGoalId)) return;
+
+            let goalObject = {
+                id: uniqueGoalId,
+                text: `<strong>${hScore}:${aScore}</strong> — ${home} vs ${away} (${cleanPlayer}${minStr})`
+            };
+
+            if (!recentGoalsList.some(g => g.id === uniqueGoalId)) {
+                recentGoalsList.unshift(goalObject);
+                if (recentGoalsList.length > 5) recentGoalsList = recentGoalsList.slice(0, 5);
+                localStorage.setItem('rwo_recent_goals_cache', JSON.stringify(recentGoalsList));
+            }
+
+            try {
+                processingGoals.add(uniqueGoalId);
+
+                let { data: existing, error: checkError } = await supabaseClient
+                    .from('sent_goals_rwo')
+                    .select('goal_id')
+                    .eq('goal_id', uniqueGoalId)
+                    .maybeSingle();
+
+                if (!existing && !checkError) {
+                    let { error: insertError } = await supabaseClient
+                        .from('sent_goals_rwo')
+                        .insert([{ goal_id: uniqueGoalId }]);
+
+                    if (!insertError) {
+                        await fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
+                            method: 'POST',
+                            mode: 'cors',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                table: 'push_subscriptions_rwo',
+                                title: `⚽ TOR! für ${scoringTeam} zum ${hScore}:${aScore}`,
+                                body: `Torschütze: ${cleanPlayer}${minStr}\n${home} : ${away} (${hScore}:${aScore})`
+                            })
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error("Fehler beim Regionalliga West Tor-Cache & Push:", e);
+            } finally {
+                processingGoals.delete(uniqueGoalId);
+            }
         }
 
         function showGoalAlert(teamName, scorerInfo, matchInfo) {
@@ -390,15 +559,21 @@
         function hideGoalAlert() { document.getElementById("goalAlertBanner").style.display = "none"; }
 
         function manageSmartPolling(hasLiveGames) {
-            if (hasLiveGames && !smartPollingInterval) {
-                smartPollingInterval = setInterval(() => {
-                    if (currentMatchday) loadMatchday(currentMatchday, true);
-                    loadTable();
-                }, 60000);
-            } else if (!hasLiveGames && smartPollingInterval) {
+            if (smartPollingInterval) {
                 clearInterval(smartPollingInterval);
                 smartPollingInterval = null;
             }
+
+            if (!isLivePollingEnabled) return;
+
+            const pollingIntervalTime = hasLiveGames ? 30000 : 120000;
+
+            smartPollingInterval = setInterval(() => {
+                if (currentMatchday && isLivePollingEnabled) {
+                    loadMatchday(currentMatchday, true);
+                    loadTable();
+                }
+            }, pollingIntervalTime);
         }
 
         function processScorerFromEvents(events, homeTeam, awayTeam) {
@@ -552,7 +727,6 @@
             }
         }
 
-        // Visueller Zeitstrahl: Kleinere Schriftart für Torschütze (über dem Ball) und Spielstand/Minute (unter dem Ball)
         function generateVisualTimelineHtml(goalEvents, homeTeamId, homeTeamObj, awayTeamObj) {
             if (!goalEvents || goalEvents.length === 0) return "";
             
@@ -637,14 +811,27 @@
                         let isLive = ["1H", "2H", "ET", "P", "HT"].includes(m.fixture.status.short);
                         if (isLive) hasLiveGames = true;
 
+                        let latestScorer = "";
+                        let scoringTeam = "";
+                        if (events && events.length > 0) {
+                            let goalEvents = events.filter(ev => ev.type === 'Goal' && (!ev.detail || !ev.detail.includes('Own Goal')));
+                            if (goalEvents.length > 0) {
+                                let lastGoal = goalEvents[goalEvents.length - 1];
+                                latestScorer = `${lastGoal.player?.name || ''} (${lastGoal.time?.elapsed || ''}')`;
+                                scoringTeam = lastGoal.team?.id === home.id ? home.name : away.name;
+                            }
+                        }
+
+                        checkAllGoalsAndNotify(home.name, away.name, goalsHome, goalsAway, latestScorer, fixtureId, scoringTeam);
+
                         if (previousScores[fixtureId] !== undefined) {
                             if (goalsHome > previousScores[fixtureId].home || goalsAway > previousScores[fixtureId].away) {
-                                let scoringTeam = goalsHome > previousScores[fixtureId].home ? home.name : away.name;
-                                let latestGoal = events.filter(ev => ev.type === 'Goal' && (!ev.detail || !ev.detail.includes('Own Goal'))).pop();
-                                showGoalAlert(scoringTeam, latestGoal ? `${latestGoal.player.name} (${latestGoal.time.elapsed}. Min)` : "Tor", `${home.name} - ${away.name}`);
+                                let goalTeamName = goalsHome > previousScores[fixtureId].home ? home.name : away.name;
+                                showGoalAlert(goalTeamName, latestScorer || "Tor", `${home.name} - ${away.name} (${goalsHome}:${goalsAway})`);
                             }
                         }
                         previousScores[fixtureId] = { home: goalsHome, away: goalsAway };
+                        localStorage.setItem('rwo_previous_scores', JSON.stringify(previousScores));
 
                         let displayHome = m.goals.home !== null ? m.goals.home : "-";
                         let displayAway = m.goals.away !== null ? m.goals.away : "-";
