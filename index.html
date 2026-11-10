@@ -817,7 +817,7 @@
                             let goalEvents = events.filter(ev => ev.type === 'Goal' && (!ev.detail || !ev.detail.includes('Own Goal')));
                             if (goalEvents.length > 0) {
                                 let lastGoal = goalEvents[goalEvents.length - 1];
-                                latestScorer = `${lastGoal.player?.name || ''} (${lastGoal.time?.elapsed || ''}')`;
+                                latestScorer = `${lastGoal.player?.name || ''} (${lastGoal.time?.elapsed || ''})`;
                                 scoringTeam = lastGoal.team?.id === home.id ? home.name : away.name;
                             }
                         }
@@ -1017,7 +1017,8 @@
                 const data = await res.json();
                 if(data.response && data.response.length > 0) {
                     const standings = data.response[0].league.standings[0];
-                    let html = `<table><tr><th>#</th><th>Team</th><th class="center">Sp</th><th class="center">Tore</th><th class="right">Pkt</th></tr>`;
+                    // Vollständige Tabelle mit allen Spalten (Spiele, S, U, N, Tore, Tordifferenz, Punkte)
+                    let html = `<table><tr><th>#</th><th>Team</th><th class="center">Sp</th><th class="center">S</th><th class="center">U</th><th class="center">N</th><th class="center">Tore</th><th class="center">Diff</th><th class="right">Pkt</th></tr>`;
                     
                     let top3Html = "";
                     for(let i = 0; i < Math.min(3, standings.length); i++) {
@@ -1031,11 +1032,17 @@
                         let zoneClass = s.rank === 1 ? "promotion-zone" : (s.rank >= 15 ? "relegation-zone" : "");
                         if (isRWO(s.team.name)) zoneClass += " rwo-team";
                         
+                        let diff = s.goalsDiff !== undefined ? (s.goalsDiff > 0 ? '+' + s.goalsDiff : s.goalsDiff) : (s.all.goals.for - s.all.goals.against);
+
                         html += `<tr class="table-row ${zoneClass}" onclick="openTeamStats(${s.team.id}, '${s.team.name}', '${s.team.logo}')">
                             <td><b>${s.rank}</b></td>
                             <td><div class="table-team"><img src="${s.team.logo}"><span>${s.team.name}</span></div></td>
                             <td class="center">${s.all.played}</td>
+                            <td class="center">${s.all.win}</td>
+                            <td class="center">${s.all.draw}</td>
+                            <td class="center">${s.all.lose}</td>
                             <td class="center">${s.all.goals.for}:${s.all.goals.against}</td>
+                            <td class="center">${diff}</td>
                             <td class="right"><b>${s.points}</b></td>
                         </tr>`;
                     });
