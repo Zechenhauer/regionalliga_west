@@ -44,15 +44,35 @@
             --border-color: #30363d;
             --live-red: #ff3333;
             --rwo-red: #da291c;
+            --home-color: #da291c; /* Heim-Tore (Rot) */
+            --away-color: #388bfd; /* Gast-Tore (Blau) */
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-main); padding: 15px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 950px; }
 
         header { text-align: center; margin-bottom: 20px; }
-        h1 { font-size: 2.2rem; color: var(--accent-color); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .header-flex { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 8px; flex-wrap: wrap; }
+        .league-logo-box { background: #ffffff; padding: 6px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); width: 65px; height: 65px; flex-shrink: 0; }
+        .league-logo { width: 100%; height: 100%; object-fit: contain; }
+        .header-titles { text-align: left; }
+        @media (max-width: 600px) { .header-titles { text-align: center; } }
+        h1 { font-size: 2.2rem; color: var(--accent-color); text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.1; }
         .subtitle { color: var(--text-muted); font-size: 0.95rem; }
-        .author-sub { color: var(--accent-color); font-size: 0.8rem; font-weight: 500; margin-top: 4px; letter-spacing: 0.5px; text-transform: uppercase; }
+        
+        .author-sub { 
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(90deg, #150a0d 0%, #221a22 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 5px 14px 5px 6px;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .author-avatar { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid var(--accent-color); }
+        .author-text { color: var(--accent-color); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
 
         .status-box { background: #131824; border: 1px solid var(--accent-color); padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; }
 
@@ -90,8 +110,8 @@
         .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; }
         h2 { font-size: 1.2rem; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; color: var(--accent-color); }
 
-        /* Spiel-Item */
-        .match-card-item { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 15px; margin-bottom: 10px; cursor: pointer; transition: background 0.15s; }
+        /* Spiel-Item & Gesamt-Timeline-Kachel im dezenten Gold-Ton */
+        .match-card-item { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; cursor: pointer; transition: background 0.15s; }
         .match-card-item:hover { background: var(--card-hover); }
         .match-main-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; }
         .team { display: flex; align-items: center; gap: 8px; width: 38%; }
@@ -104,11 +124,72 @@
         .live-badge { background: var(--live-red); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; animation: pulse-live 1.5s infinite; display: inline-block; }
         @keyframes pulse-live { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-        .match-scorers-preview { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border-color); font-size: 0.8rem; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        .scorer-tag { display: inline-flex; align-items: center; justify-content: space-between; background: #161b22; padding: 4px 12px; border-radius: 4px; border: 1px solid var(--border-color); width: 100%; max-width: 420px; }
+        /* Timeline-Kachel komplett in dezenter Gold-Optik */
+        .match-scorers-preview { 
+            margin-top: 14px; 
+            padding: 12px 10px; 
+            background: rgba(212, 175, 55, 0.08); 
+            border: 1px solid rgba(212, 175, 55, 0.3); 
+            border-radius: 8px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+        }
+
+        /* Platz oben und unten für die kleineren Infoboxen */
+        .goal-timeline-track { position: relative; margin: 34px 16px 26px 16px; height: 26px; display: flex; align-items: center; }
+        .goal-timeline-line { position: absolute; width: 100%; height: 3px; background: #30363d; border-radius: 2px; top: 50%; transform: translateY(-50%); z-index: 1; }
+        .goal-timeline-node { position: absolute; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; z-index: 2; }
+        
+        .goal-node-icon { font-size: 12px; background: #161b22; border-radius: 50%; padding: 2px; line-height: 1; box-shadow: 0 0 6px rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; }
+        .goal-node-icon.home-node { border: 2px solid var(--home-color); }
+        .goal-node-icon.away-node { border: 2px solid var(--away-color); }
+
+        /* Torschütze & Verein ÜBER dem Fußball (kleinere Schriftart: 0.60rem) */
+        .goal-node-scorer { 
+            position: absolute; 
+            bottom: 20px; 
+            background: #161b22; 
+            border: 1px solid var(--border-color); 
+            padding: 2px 5px; 
+            border-radius: 4px; 
+            font-size: 0.60rem; 
+            white-space: nowrap; 
+            color: #fff; 
+            box-shadow: 0 2px 6px rgba(0,0,0,0.5); 
+            text-align: center; 
+            display: flex; 
+            align-items: center; 
+            gap: 3px; 
+        }
+        .goal-node-scorer.home-scorer { border-color: rgba(218, 41, 28, 0.5); }
+        .goal-node-scorer.away-scorer { border-color: rgba(56, 139, 253, 0.5); }
+
+        /* Spielstand & Minute UNTER dem Fußball (kleinere Schriftart: 0.60rem) */
+        .goal-node-meta { 
+            position: absolute; 
+            top: 20px; 
+            background: #161b22; 
+            border: 1px solid var(--border-color); 
+            padding: 2px 5px; 
+            border-radius: 4px; 
+            font-size: 0.60rem; 
+            white-space: nowrap; 
+            color: #fff; 
+            box-shadow: 0 2px 6px rgba(0,0,0,0.5); 
+            text-align: center; 
+            font-weight: bold;
+        }
+
+        .scorer-tag { display: inline-flex; align-items: center; justify-content: space-between; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); width: 100%; margin-top: 2px; font-size: 0.8rem; }
+        .scorer-tag.home-goal { background: rgba(218, 41, 28, 0.15); border-color: rgba(218, 41, 28, 0.4); }
+        .scorer-tag.away-goal { background: rgba(56, 139, 253, 0.15); border-color: rgba(56, 139, 253, 0.4); }
+
         .scorer-left { display: flex; align-items: center; gap: 8px; }
         .scorer-right { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--text-muted); }
-        .scorer-score-badge { font-weight: bold; color: var(--accent-color); background: #21262d; padding: 1px 6px; border-radius: 3px; font-size: 0.75rem; }
+        .scorer-score-badge { font-weight: bold; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
+        .home-goal .scorer-score-badge { background: var(--home-color); color: #fff; }
+        .away-goal .scorer-score-badge { background: var(--away-color); color: #fff; }
 
         table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         th, td { padding: 8px 8px; text-align: left; border-bottom: 1px solid var(--border-color); }
@@ -135,10 +216,6 @@
         .modal-header { text-align: center; margin-bottom: 20px; }
         .modal-teams { display: flex; justify-content: space-around; align-items: center; font-size: 1.1rem; font-weight: bold; margin-bottom: 8px; }
         .modal-teams img { width: 35px; height: 35px; object-fit: contain; }
-        
-        .event-item { display: flex; align-items: center; justify-content: space-between; font-size: 0.88rem; padding: 6px 10px; border-bottom: 1px solid var(--border-color); color: var(--text-main); background: #161b22; margin-bottom: 5px; border-radius: 6px; }
-        .event-time { font-weight: bold; color: var(--accent-color); min-width: 35px; }
-        .event-score { background: #21262d; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
         
         .stat-row { margin-bottom: 10px; font-size: 0.85rem; }
         .stat-info { display: flex; justify-content: space-between; margin-bottom: 3px; color: var(--text-muted); font-weight: 500; }
@@ -168,9 +245,19 @@
         </div>
 
         <header>
-            <h1>Regionalliga West PRO</h1>
-            <div class="subtitle">RW Oberhausen — Live, Team-Statistiken, Aufstellungen & Bestenlisten (Saison 2026)</div>
-            <div class="author-sub">Webmanagement Jürgen Schützendorf</div>
+            <div class="header-flex">
+                <div class="league-logo-box">
+                    <img src="https://media.api-sports.io/football/leagues/87.png" alt="Regionalliga West Logo" class="league-logo">
+                </div>
+                <div class="header-titles">
+                    <h1>Regionalliga West PRO</h1>
+                    <div class="subtitle">RW Oberhausen — Live, Team-Statistiken, Aufstellungen & Bestenlisten (Saison 2026)</div>
+                </div>
+            </div>
+            <div class="author-sub">
+                <img src="https://lhusylpjnujlqomougmg.supabase.co/storage/v1/object/public/Bilder/Juergen%20Schuetzendorf.png" alt="Jürgen Schützendorf" class="author-avatar">
+                <span class="author-text">Webmanagement Jürgen Schützendorf</span>
+            </div>
         </header>
 
         <div id="apiStatusBanner" class="status-box">
@@ -220,8 +307,8 @@
                 <div id="modalReferee" style="color: var(--accent-color); font-size: 0.8rem;"></div>
             </div>
             <div style="margin-top: 15px;">
-                <h3 style="font-size: 1rem; color: var(--accent-color); margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">Tore & Spielverlauf</h3>
-                <div id="modalEvents">Lade Spieldetails...</div>
+                <h3 style="font-size: 1rem; color: var(--accent-color); margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">Tor-Timeline & Torschützen</h3>
+                <div id="modalEvents" style="display: flex; flex-direction: column; gap: 10px;">Lade Tor-Timeline...</div>
             </div>
             <div style="margin-top: 20px;">
                 <h3 style="font-size: 1rem; color: var(--accent-color); margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">Formationen, Aufstellungen, Wechsel & Karten</h3>
@@ -314,12 +401,10 @@
             }
         }
 
-        // Automatische Aggregation der Torschützen aus allen geladenen Spieldaten
         function processScorerFromEvents(events, homeTeam, awayTeam) {
             if (!events) return;
             events.forEach(ev => {
                 if (ev.type === 'Goal' && ev.player && ev.player.name) {
-                    // Eigentore nicht als Torschütze werten
                     if (ev.detail && ev.detail.includes('Own Goal')) return;
                     
                     let playerName = ev.player.name;
@@ -467,6 +552,49 @@
             }
         }
 
+        // Visueller Zeitstrahl: Kleinere Schriftart für Torschütze (über dem Ball) und Spielstand/Minute (unter dem Ball)
+        function generateVisualTimelineHtml(goalEvents, homeTeamId, homeTeamObj, awayTeamObj) {
+            if (!goalEvents || goalEvents.length === 0) return "";
+            
+            let nodesHtml = "";
+            let cH = 0, cA = 0;
+
+            goalEvents.forEach(ge => {
+                let isHome = ge.team.id === homeTeamId;
+                if (isHome) cH++; else cA++;
+
+                let minute = parseInt(ge.time.elapsed) || 0;
+                let percent = Math.min(Math.max((minute / 95) * 100, 3), 97);
+                let scoreText = `${cH}:${cA}`;
+                let teamObj = isHome ? homeTeamObj : awayTeamObj;
+
+                let nodeClass = isHome ? "home-node" : "away-node";
+                let scorerClass = isHome ? "home-scorer" : "away-scorer";
+
+                nodesHtml += `
+                    <div class="goal-timeline-node" style="left: ${percent}%;">
+                        <div class="goal-node-scorer ${scorerClass}">
+                            <img src="${teamObj.logo}" style="width:11px; height:11px; object-fit:contain;">
+                            <span>${ge.time.elapsed}' ${ge.player.name}</span>
+                        </div>
+                        <div class="goal-node-icon ${nodeClass}" title="${ge.time.elapsed}' ${ge.player.name} (${scoreText})">⚽</div>
+                        <div class="goal-node-meta">
+                            <span>(${scoreText})</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            return `
+                <div class="goal-timeline-track">
+                    <div class="goal-timeline-line"></div>
+                    <div style="position: absolute; left: 0; font-size: 0.65rem; color: var(--text-muted); top: -14px;">0'</div>
+                    <div style="position: absolute; right: 0; font-size: 0.65rem; color: var(--text-muted); top: -14px;">90'</div>
+                    ${nodesHtml}
+                </div>
+            `;
+        }
+
         async function loadMatchday(round, background = false) {
             currentMatchday = round;
             document.getElementById("matchdayTitle").textContent = round.replace("Regular Season - ", "Spieltag ");
@@ -504,7 +632,6 @@
                         const goalsHome = m.goals.home ?? 0;
                         const goalsAway = m.goals.away ?? 0;
 
-                        // Torschützen für die Gesamtliste einsammeln
                         processScorerFromEvents(events, home, away);
 
                         let isLive = ["1H", "2H", "ET", "P", "HT"].includes(m.fixture.status.short);
@@ -513,7 +640,7 @@
                         if (previousScores[fixtureId] !== undefined) {
                             if (goalsHome > previousScores[fixtureId].home || goalsAway > previousScores[fixtureId].away) {
                                 let scoringTeam = goalsHome > previousScores[fixtureId].home ? home.name : away.name;
-                                let latestGoal = events.filter(ev => ev.type === 'Goal').pop();
+                                let latestGoal = events.filter(ev => ev.type === 'Goal' && (!ev.detail || !ev.detail.includes('Own Goal'))).pop();
                                 showGoalAlert(scoringTeam, latestGoal ? `${latestGoal.player.name} (${latestGoal.time.elapsed}. Min)` : "Tor", `${home.name} - ${away.name}`);
                             }
                         }
@@ -529,16 +656,21 @@
                         tickerHtml += `<span class="ticker-item ${isRwoMatch ? 'rwo-ticker' : ''}"><img src="${home.logo}" class="ticker-team-logo">${home.name} <span class="ticker-score">${displayHome}:${displayAway}</span> ${away.name} <img src="${away.logo}" class="ticker-team-logo"></span>`;
 
                         let scorersHtml = "";
-                        let goalEvents = events.filter(ev => ev.type === 'Goal');
+                        let goalEvents = events.filter(ev => ev.type === 'Goal' && (!ev.detail || !ev.detail.includes('Own Goal')));
                         if (goalEvents.length > 0) {
                             scorersHtml = `<div class="match-scorers-preview">`;
+                            scorersHtml += generateVisualTimelineHtml(goalEvents, home.id, home, away);
+
                             let cH = 0, cA = 0;
                             goalEvents.forEach(ge => {
-                                if (ge.team.id === home.id) cH++; else cA++;
-                                let tLogo = ge.team.id === home.id ? home.logo : away.logo;
-                                let tName = ge.team.id === home.id ? home.name : away.name;
+                                let isHomeGoal = ge.team.id === home.id;
+                                if (isHomeGoal) cH++; else cA++;
+                                let tLogo = isHomeGoal ? home.logo : away.logo;
+                                let tName = isHomeGoal ? home.name : away.name;
+                                let goalClass = isHomeGoal ? "home-goal" : "away-goal";
+
                                 scorersHtml += `
-                                    <div class="scorer-tag">
+                                    <div class="scorer-tag ${goalClass}">
                                         <div class="scorer-left">
                                             <span class="scorer-score-badge">${cH}:${cA}</span>
                                             <span>⚽ ${ge.time.elapsed}' ${ge.player.name}</span>
@@ -555,7 +687,7 @@
 
                         const itemDiv = document.createElement("div");
                         itemDiv.className = "match-card-item" + (isRwoMatch ? " rwo-highlight" : "");
-                        itemDiv.onclick = () => openMatchDetails(m.fixture.id);
+                        itemDiv.onclick = () => openMatchDetails(m.fixture.id, events);
                         itemDiv.innerHTML = `<div class="match-main-row"><div class="team home"><span>${home.name}</span><img src="${home.logo}"></div><div class="score-box"><div class="score">${displayHome} : ${displayAway}</div><span class="match-info-sub">${dateDisplay}</span></div><div class="team"><img src="${away.logo}"><span>${away.name}</span></div></div>${scorersHtml}`;
                         container.appendChild(itemDiv);
                     });
@@ -566,11 +698,11 @@
             } catch(e) {}
         }
 
-        async function openMatchDetails(fixtureId) {
+        async function openMatchDetails(fixtureId, preloadedEvents = null) {
             const modal = document.getElementById("matchModal");
             modal.style.display = "flex";
             document.getElementById("modalTeamsHeader").innerHTML = "Lade Spieldetails...";
-            document.getElementById("modalEvents").innerHTML = "Lade Tore...";
+            document.getElementById("modalEvents").innerHTML = "Lade Tor-Timeline...";
             document.getElementById("modalLineups").innerHTML = "Lade Aufstellungen, Wechsel & Karten...";
             document.getElementById("modalStats").innerHTML = "Lade Statistiken...";
             document.getElementById("modalStatus").textContent = "";
@@ -591,32 +723,45 @@
                     const match = fixData.response[0];
                     const home = match.teams.home;
                     const away = match.teams.away;
+                    let events = match.events || preloadedEvents || [];
+                    if (events.length === 0 && match.events) events = match.events;
 
                     document.getElementById("modalTeamsHeader").innerHTML = `<div style="display:flex; align-items:center; gap:8px;"><img src="${home.logo}">${home.name}</div><div style="background:#21262d; padding:4px 12px; border-radius:6px;">${match.goals.home ?? 0} : ${match.goals.away ?? 0}</div><div style="display:flex; align-items:center; gap:8px;"><img src="${away.logo}">${away.name}</div>`;
                     document.getElementById("modalStatus").textContent = `Status: ${match.fixture.status.long}`;
                     if(match.fixture.referee) document.getElementById("modalReferee").textContent = `👨‍⚖️ Schiedsrichter: ${match.fixture.referee}`;
 
                     let evHtml = "";
-                    if (match.events) {
-                        let hG = 0, aG = 0;
-                        match.events.forEach(ev => {
-                            if (ev.type === 'Goal') {
-                                if (ev.team.id === home.id) hG++; else aG++;
-                                let tLogo = ev.team.id === home.id ? home.logo : away.logo;
-                                evHtml += `
-                                    <div class="event-item">
-                                        <div style="display:flex; align-items:center; gap:10px;">
-                                            <span class="event-time">${ev.time.elapsed}'</span>
-                                            <img src="${tLogo}" style="width:16px; height:16px; object-fit:contain;">
-                                            <span>⚽ <b>${ev.player.name}</b> <span style="color:var(--text-muted); font-size:0.8rem;">(${ev.team.name})</span></span>
-                                        </div>
-                                        <span class="event-score">${hG}:${aG}</span>
+                    let goalEvents = events.filter(ev => ev.type === 'Goal' && (!ev.detail || !ev.detail.includes('Own Goal')));
+                    
+                    if (goalEvents.length > 0) {
+                        evHtml += generateVisualTimelineHtml(goalEvents, home.id, home, away);
+
+                        let cH = 0, cA = 0;
+                        goalEvents.forEach(ge => {
+                            let isHomeGoal = ge.team.id === home.id;
+                            if (isHomeGoal) cH++; else cA++;
+                            let tLogo = isHomeGoal ? home.logo : away.logo;
+                            let tName = isHomeGoal ? home.name : away.name;
+                            let goalClass = isHomeGoal ? "home-goal" : "away-goal";
+
+                            evHtml += `
+                                <div class="scorer-tag ${goalClass}">
+                                    <div class="scorer-left">
+                                        <span class="scorer-score-badge">${cH}:${cA}</span>
+                                        <span>⚽ ${ge.time.elapsed}' ${ge.player.name}</span>
                                     </div>
-                                `;
-                            }
+                                    <div class="scorer-right">
+                                        <span>${tName}</span>
+                                        <img src="${tLogo}" style="width:14px; height:14px; object-fit:contain;" title="${tName}">
+                                    </div>
+                                </div>
+                            `;
                         });
+                    } else if (match.goals.home !== null && match.goals.away !== null && (match.goals.home > 0 || match.goals.away > 0)) {
+                        evHtml = `<div style="padding: 12px; background: #161b22; border-radius: 6px; text-align: center; color: var(--text-muted); font-size: 0.9rem;">Endergebnis: ${home.name} <b>${match.goals.home}:${match.goals.away}</b> ${away.name} <br><span style="font-size:0.75rem; color:#8b949e;">(Keine detaillierten Torschützenminuten vom Verband in der API verfügbar)</span></div>`;
                     }
-                    document.getElementById("modalEvents").innerHTML = evHtml !== "" ? evHtml : "Keine Tore.";
+
+                    document.getElementById("modalEvents").innerHTML = evHtml !== "" ? evHtml : "<div style='color:var(--text-muted); text-align:center; padding:12px;'>Keine Tore in dieser Partie (oder Spiel noch nicht begonnen).</div>";
 
                     let lineupsHtml = "Aufstellungen noch nicht verfügbar.";
                     if (lineupsData.response && lineupsData.response.length === 2) {
@@ -627,11 +772,11 @@
                             let start11 = lineupObj.startXI.map(p => `${p.player.name} (${p.player.pos})`).join(", ");
                             let subs = lineupObj.substitutes.map(p => `${p.player.name}`).join(", ");
                             
-                            let teamEvents = (match.events || []).filter(ev => ev.team.id === teamObj.id);
-                            let subsEvents = teamEvents.filter(ev => ev.type === 'subst').map(ev => `<div style="font-size:0.8rem; color:var(--text-muted);">🔄 ${ev.time.elapsed}' Ein: ${ev.player.name} | Aus: ${ev.assist.name}</div>`).join("");
+                            let teamEvents = events.filter(ev => ev.team.id === teamObj.id);
+                            let subsEvents = teamEvents.filter(ev => ev.type === 'subst').map(ev => `<div style="font-size:0.80rem; color:var(--text-muted);">🔄 ${ev.time.elapsed}' Ein: ${ev.player.name} | Aus: ${ev.assist.name}</div>`).join("");
                             let cardsEvents = teamEvents.filter(ev => ev.type === 'Card').map(ev => {
                                 let cIcon = ev.detail === 'Red Card' ? '🟥' : (ev.detail === 'Yellow Red Card' ? '🟨🟥' : '🟨');
-                                return `<div style="font-size:0.8rem; color:var(--text-muted);">${cIcon} ${ev.time.elapsed}' ${ev.player.name}</div>`;
+                                return `<div style="font-size:0.80rem; color:var(--text-muted);">${cIcon} ${ev.time.elapsed}' ${ev.player.name}</div>`;
                             }).join("");
 
                             return `
@@ -661,7 +806,7 @@
                             let aVal = aStats[i].value ?? 0;
                             let total = (parseFloat(hVal) || 0) + (parseFloat(aVal) || 0);
                             let hPer = total > 0 ? ((parseFloat(hVal) || 0) / total) * 100 : 50;
-                            statsHtml += `<div class="stat-row"><div class="stat-info"><span>${hVal}</span><span>${hStats[i].type}</span><span>${aVal}</span></div><div class="stat-bar-container"><div class="stat-bar-home" style="width: ${hPer}%;"></div><div class="stat-bar-away" style="width: ${100 - hPer}%;"></div></div></div>`;
+                            statsHtml += `<div class="stat-row"><div class="stat-info"><span>${hVal}</span><span>${statsData.response[0].statistics[i].type}</span><span>${aVal}</span></div><div class="stat-bar-container"><div class="stat-bar-home" style="width: ${hPer}%;"></div><div class="stat-bar-away" style="width: ${100 - hPer}%;"></div></div></div>`;
                         }
                     }
                     document.getElementById("modalStats").innerHTML = statsHtml !== "" ? statsHtml : "Keine Statistiken.";
